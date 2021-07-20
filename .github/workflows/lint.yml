@@ -3,11 +3,33 @@ name: Python Asterix Library
 on: [push]
 
 jobs:
+  pycodestyle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pycodestyle
+
+      - name: Lint with pycodestyle
+        run: |
+          pycodestyle *.py --exclude='./venv/*'
+
   xenon:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.9]
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -22,11 +44,12 @@ jobs:
         run: |
           xenon --max-absolute=A *.py
 
-  pycodestyle:
+  pylint:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -36,45 +59,76 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pycodestyle
-      - name: Lint with pycodestyle
+          pip install pylint
+      - name: Lint with pylint
         run: |
-          pycodestyle *.py --exclude='./venv/*'
+          pylint *.py
 
+  pydocstyle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
 
-#  build:
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pydocstyle
+      - name: Lint with pydocstyle
+        run: |
+          pip install pydocstyle
+      - name: Lint with mypy
+        run: |
+          mypy --strict *.py
+      - name: Lint with vulture
+        run: |
+          vulture *.py
 
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Set up Python ${{ matrix.python-version }}
-#        uses: actions/setup-python@v2
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install pycodestyle
-#
-#      - name: Lint with pycodestyle
-#        run: |
-#          pycodestyle *.py --exclude='./venv/*'
-#      - name: Lint with xenon
-#        run: |
-#          xenon --max-absolute=A *.py
-#      - name: Lint with pylint
-#        run: |
-#          pylint *.py
-#      - name: Lint with pydocstyle
-#        run: |
-#          pip install pydocstyle
-#      - name: Lint with mypy
-#        run: |
-#          mypy --strict *.py
-#      - name: Lint with vulture
-#        run: |
-#          vulture *.py
-#
+  mypy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mypy
+      - name: Lint with mypy
+        run: |
+          mypy --strict *.py
+      - name: Lint with vulture
+        run: |
+          vulture *.py
+
+  vulture:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install vulture
+      - name: Lint with vulture
+        run: |
+          vulture *.py
