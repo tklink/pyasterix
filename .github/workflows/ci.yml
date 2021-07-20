@@ -3,8 +3,43 @@ name: Python Asterix Library
 on: [push]
 
 jobs:
-  build:
+  runs-on: ubuntu-latest
+  strategy:
+    matrix:
+      python-version: [3.6, 3.7, 3.8, 3.9]
+#  pycodestyle:
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Set up Python ${{ matrix.python-version }}
+#        uses: actions/setup-python@v2
+#        with:
+#          python-version: ${{ matrix.python-version }}
+#      - name: Install dependencies
+#        run: |
+#          python -m pip install --upgrade pip
+#          pip install pycodestyle xenon pylint pydocstyle mypy vulture
+#
+#      - name: Lint with pycodestyle
+#        run: |
+#          pycodestyle *.py --exclude='./venv/*'
+#      - name: Lint with xenon
+#        run: |
+#          xenon --max-absolute=A *.py
+#      - name: Lint with pylint
+#        run: |
+#          pylint *.py
+#      - name: Lint with pydocstyle
+#        run: |
+#          pip install pydocstyle
+#      - name: Lint with mypy
+#        run: |
+#          mypy --strict *.py
+#      - name: Lint with vulture
+#        run: |
+#          vulture *.py
 
+
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pycodestyle xenon pylint pydocstyle mypy vulture
+          pip install pycodestyle
 
       - name: Lint with pycodestyle
         run: |
