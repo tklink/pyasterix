@@ -62,7 +62,10 @@ filenames = {
     242: 'config/asterix_cat242_1_0.xml',
     # 252:'config/asterix_cat252_6_2.xml',
     252: 'config/asterix_cat252_7_0.xml',
-    # 252:'config/asterix_cat252_6_1.xml'}
+    # 252:'config/asterix_cat252_6_1.xml',
+    154: 'config/asterix_cat154_1_2.xml',
+    157: 'config/asterix_cat157_2_0.xml',
+    160: 'config/asterix_cat160_2_0.xml',
 }
 
 
@@ -131,8 +134,7 @@ class AsterixEncoder():
 
             FSPEC_bits_len += 1
 
-        self.encoded += (FSPEC_bits).to_bytes(FSPEC_bits_len //
-                                              8, byteorder='big')
+        self.encoded += (FSPEC_bits).to_bytes(FSPEC_bits_len // 8, byteorder='big')
 
         for uapitem in self.uapitems:
             id = uapitem.firstChild.nodeValue
@@ -142,21 +144,17 @@ class AsterixEncoder():
             for dataitem in self.dataitems:
                 itemid = dataitem.getAttribute('id')
                 if itemid == id:
-                    dataitemformat = dataitem.getElementsByTagName('DataItemFormat')[
-                        0]
+                    dataitemformat = dataitem.getElementsByTagName('DataItemFormat')[0]
                     for cn in dataitemformat.childNodes:
                         r = None
                         if cn.nodeName == 'Fixed':
                             n, r = self.encode_fixed(self.asterix[itemid], cn)
                         elif cn.nodeName == 'Repetitive':
-                            n, r = self.encode_repetitive(
-                                self.asterix[itemid], cn)
+                            n, r = self.encode_repetitive(self.asterix[itemid], cn)
                         elif cn.nodeName == 'Variable':
-                            n, r = self.encode_variable(
-                                self.asterix[itemid], cn)
+                            n, r = self.encode_variable(self.asterix[itemid], cn)
                         elif cn.nodeName == 'Compound':
-                            n, r = self.encode_compound(
-                                self.asterix[itemid], cn)
+                            n, r = self.encode_compound(self.asterix[itemid], cn)
 
                         if r:
                             self.encoded += r
@@ -168,8 +166,7 @@ class AsterixEncoder():
         encoded_bytes = 0
         encoded_num = 0         # the num of encoded asterix sub filed
         for bits in bitslist:
-            bit_name = bits.getElementsByTagName('BitsShortName')[
-                0].firstChild.nodeValue
+            bit_name = bits.getElementsByTagName('BitsShortName')[0].firstChild.nodeValue
 
             if bit_name in data_asterix:
                 # skip spare,FX and zero subfield
@@ -250,9 +247,8 @@ class AsterixEncoder():
             if cn.nodeName not in ['Fixed', 'Repetitive', 'Variable', 'Compound']:
                 continue
 
-            index += 1      # current node index
-
-            if index == 1:      # skip first node, it's indicator
+            if index == 0:      # skip first node, it's indicator
+                index += 1
                 continue
 
             if index % 8 == 0:  # Fx field
@@ -267,11 +263,12 @@ class AsterixEncoder():
             elif cn.nodeName == 'Compound':
                 n, r = self.decode_compound(data_asterix, cn)
 
-            if n == 0:
-                continue
-            encoded_num += n
-            result += r
-            indexs.append(index)
+            if n != 0:
+                encoded_num += n
+                result += r
+                indexs.append(index)
+                
+            index += 1 
 
         indicator = 0
         maxindex = indexs[-1]
@@ -301,7 +298,7 @@ class AsterixDecoder():
         self.decoded_result = {}
 
         # ------------------ cat -------------------------------
-        cat = int.from_bytes(self.bytes[0:1], byteorder='big', signed=True)
+        cat = int.from_bytes(self.bytes[0:1], byteorder='big', signed=False)
         self.p += 1
 
         try:
@@ -318,7 +315,7 @@ class AsterixDecoder():
 
         # ------------------ length -------------------------------
         self.length = int.from_bytes(
-            self.bytes[self.p:self.p + 2], byteorder='big', signed=True)
+            self.bytes[self.p:self.p + 2], byteorder='big', signed=False)
         self.p += 2
 
         while self.p < self.length:
@@ -358,8 +355,7 @@ class AsterixDecoder():
         for itemid in itemids:
             for dataitem in self.dataitems:
                 if dataitem.getAttribute('id') == itemid:
-                    dataitemformat = dataitem.getElementsByTagName('DataItemFormat')[
-                        0]
+                    dataitemformat = dataitem.getElementsByTagName('DataItemFormat')[0]
                     for cn in dataitemformat.childNodes:
                         r = None
                         if cn.nodeName == 'Fixed':
@@ -385,8 +381,7 @@ class AsterixDecoder():
         data = int.from_bytes(_bytes, byteorder='big', signed=False)
 
         for bits in bitslist:
-            bit_name = bits.getElementsByTagName('BitsShortName')[
-                0].firstChild.nodeValue
+            bit_name = bits.getElementsByTagName('BitsShortName')[0].firstChild.nodeValue
 
             bit = bits.getAttribute('bit')
             if bit != '':
@@ -457,7 +452,7 @@ class AsterixDecoder():
         mask = 1 << (8 * indicator_octetslen - 1)
         indicator = 1
         for i in range(0, 8 * indicator_octetslen):
-            if i % 8 != 7:  # i is FX
+            if i % 8 == 7:  # i is FX
                 continue
 
             if indicator_octets & (mask >> i) > 0:
@@ -472,7 +467,8 @@ class AsterixDecoder():
             if cn.nodeName not in ['Fixed', 'Repetitive', 'Variable', 'Compound']:
                 continue
 
-            if index not in indicator:
+            #if index not in indicator:
+            if index not in indicators:
                 index += 1
                 continue
 
